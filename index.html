@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RF-6 中控软件</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <h1 class="logo">RF-6 中控软件</h1>
+      <nav class="main-nav">
+        <a href="#dashboard" class="nav-link active">首页</a>
+        <a href="#devices" class="nav-link">设备管理</a>
+        <a href="#scenes" class="nav-link">场景管理</a>
+        <a href="#data-update" class="nav-link">数据更新</a>
+        <a href="#convert" class="nav-link">格式转换</a>
+        <a href="#settings" class="nav-link">系统设置</a>
+      </nav>
+      <div class="header-actions">
+        <span class="user-badge">admin</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main">
+    <!-- Dashboard -->
+    <section id="dashboard" class="page active">
+      <div class="page-hero">
+        <h2 class="page-title">仪表盘</h2>
+        <p class="page-desc">实时监控 RF-6 设备与场景运行状态</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-value" id="dashboard-online-count">30</span>
+          <span class="stat-label">在线设备</span>
+        </div>
+      </div>
+      <div class="quick-cards">
+        <div class="quick-card" data-target="devices">
+          <span class="quick-icon">📱</span>
+          <h3>设备管理</h3>
+          <p>查看设备</p>
+        </div>
+        <div class="quick-card" data-target="scenes">
+          <span class="quick-icon">🎬</span>
+          <h3>场景管理</h3>
+          <p>管理场景</p>
+        </div>
+        <div class="quick-card" data-target="data-update">
+          <span class="quick-icon">🔄</span>
+          <h3>数据更新</h3>
+          <p>更新数据</p>
+        </div>
+        <div class="quick-card" data-target="convert">
+          <span class="quick-icon">📄</span>
+          <h3>格式转换</h3>
+          <p>数据转换</p>
+        </div>
+      </div>
+      <div class="dashboard-devices-section">
+        <h3 class="panel-title">设备状态</h3>
+        <div id="dashboard-device-grid" class="device-grid-by-group"><!-- 按分组显示设备方框，由 JS 渲染 --></div>
+      </div>
+    </section>
+
+    <!-- Device Management -->
+    <section id="devices" class="page">
+      <div class="page-hero">
+        <h2 class="page-title">设备管理</h2>
+        <p class="page-desc">设备列表、分组与批量操作</p>
+      </div>
+      <div class="toolbar">
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-group-manage">分组管理</button>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-new-group">新建分组</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btn-batch-start">批量启动</button>
+        <button type="button" class="btn btn-outline btn-sm" id="btn-batch-stop">批量停止</button>
+      </div>
+      <div id="device-groups-container"><!-- 按分组分开展示，由 JS 渲染 --></div>
+    </section>
+
+    <!-- Scene Management -->
+    <section id="scenes" class="page">
+      <div class="page-hero">
+        <h2 class="page-title">场景管理</h2>
+        <p class="page-desc">场景配置与回放文件</p>
+      </div>
+      <div class="toolbar">
+        <button type="button" class="btn btn-primary btn-sm" id="btn-create-scene">创建场景</button>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>场景名称</th>
+              <th>场景备注</th>
+              <th>回放文件</th>
+              <th>文件顺序</th>
+              <th>开始时间</th>
+              <th>结束时间</th>
+              <th>循环</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="scene-tbody">
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Data Update -->
+    <section id="data-update" class="page">
+      <div class="page-hero">
+        <h2 class="page-title">数据更新</h2>
+        <p class="page-desc">按分组查看设备状态，向设备下发场景数据</p>
+      </div>
+      <div class="toolbar">
+        <button type="button" class="btn btn-primary btn-sm" id="btn-open-update-modal">更新数据</button>
+      </div>
+      <div id="data-update-groups-container"><!-- 按分组显示设备，由 JS 渲染 --></div>
+    </section>
+
+    <!-- Format Conversion -->
+    <section id="convert" class="page">
+      <div class="page-hero">
+        <h2 class="page-title">格式转换</h2>
+        <p class="page-desc">原数据格式转 RF-6 兼容格式</p>
+      </div>
+      <div class="form-panel">
+        <div class="form-row">
+          <label>原数据格式</label>
+          <select class="input">
+            <option>Labsat</option>
+            <option>Spirent</option>
+            <option>RF-8</option>
+            <option>其他</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>数据文件</label>
+          <div class="input-group">
+            <input type="text" class="input" placeholder="选择文件路径" readonly />
+            <button class="btn btn-outline btn-sm">浏览</button>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>位宽选择</label>
+          <select class="input">
+            <option>4-bit</option>
+            <option>8-bit</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>输出文件名</label>
+          <input type="text" class="input" placeholder="输出文件名" />
+        </div>
+        <div class="form-row">
+          <label>存储路径</label>
+          <div class="input-group">
+            <input type="text" class="input" placeholder="选择存储路径" readonly />
+            <button class="btn btn-outline btn-sm">浏览</button>
+          </div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary">开始转换</button>
+          <button class="btn btn-outline">取消</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- System Settings -->
+    <section id="settings" class="page">
+      <div class="page-hero">
+        <h2 class="page-title">系统设置</h2>
+        <p class="page-desc">网络、固件、权限与日志</p>
+      </div>
+      <div class="settings-grid">
+        <div class="settings-card">
+          <h3>网络设置</h3>
+          <p>配置 IP / 端口</p>
+        </div>
+        <div class="settings-card" id="btn-open-firmware" role="button" tabindex="0">
+          <h3>固件升级</h3>
+          <p>上传固件</p>
+        </div>
+        <div class="settings-card">
+          <h3>权限管理</h3>
+          <p>设置角色权限</p>
+        </div>
+        <div class="settings-card">
+          <h3>日志管理</h3>
+          <p>查看日志</p>
+        </div>
+      </div>
+      <div class="action-row">
+        <button class="btn btn-primary">保存设置</button>
+        <button class="btn btn-outline">恢复默认</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- 设备详情 弹窗 -->
+  <div id="modal-device-detail" class="modal-overlay" aria-hidden="true">
+    <div class="modal">
+      <h3 class="modal-title">设备详情</h3>
+      <div id="device-detail-content" class="device-detail-content">
+        <div class="form-row"><label>设备编号</label><p id="dd-id" class="dd-value"></p></div>
+        <div class="form-row"><label>设备名称</label><p id="dd-name" class="dd-value"></p></div>
+        <div class="form-row"><label>网络 IP</label><p id="dd-ip" class="dd-value"></p></div>
+        <div class="form-row"><label>当前运行场景</label><p id="dd-scene" class="dd-value"></p></div>
+        <div class="form-row"><label>设备内存储的场景</label><p id="dd-stored-scenes" class="dd-value"></p></div>
+        <div class="form-row"><label>剩余存储空间</label><p id="dd-storage" class="dd-value"></p></div>
+        <div class="form-row"><label>状态</label><p id="dd-status" class="dd-value"></p></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" id="btn-dd-start">启动</button>
+        <button type="button" class="btn btn-outline" id="btn-dd-stop">关闭设备</button>
+        <button type="button" class="btn btn-outline modal-cancel">返回</button>
+      </div>
+      <input type="hidden" id="dd-device-id" />
+    </div>
+  </div>
+
+  <!-- 新建分组 弹窗 -->
+  <div id="modal-new-group" class="modal-overlay" aria-hidden="true">
+    <div class="modal">
+      <h3 class="modal-title">新建分组</h3>
+      <div class="form-row">
+        <label>分组名称</label>
+        <input type="text" id="new-group-name" class="input" placeholder="输入分组名称" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" id="btn-save-new-group">保存</button>
+        <button type="button" class="btn btn-outline modal-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分组管理 弹窗 -->
+  <div id="modal-group-manage" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-lg">
+      <h3 class="modal-title">分组管理</h3>
+      <div id="group-manage-list" class="group-manage-list"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline modal-cancel">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分配设备到分组 弹窗 -->
+  <div id="modal-assign-group" class="modal-overlay" aria-hidden="true">
+    <div class="modal">
+      <h3 class="modal-title">分配设备到分组</h3>
+      <p class="modal-desc">选择要加入分组 <strong id="assign-group-name"></strong> 的设备</p>
+      <input type="hidden" id="assign-group-id" />
+      <div id="assign-device-list" class="assign-device-list"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" id="btn-confirm-assign">确定</button>
+        <button type="button" class="btn btn-outline modal-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 组内场景管理 弹窗 -->
+  <div id="modal-group-scene" class="modal-overlay" aria-hidden="true">
+    <div class="modal">
+      <h3 class="modal-title">组内场景管理</h3>
+      <p class="modal-desc" id="modal-group-scene-desc">选择要应用到本组所有设备的场景</p>
+      <div class="form-row">
+        <label>选择场景</label>
+        <select id="group-scene-select" class="input"></select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" id="btn-apply-group-scene">应用</button>
+        <button type="button" class="btn btn-outline modal-cancel">取消</button>
+      </div>
+      <input type="hidden" id="group-scene-group-id" />
+    </div>
+  </div>
+
+  <!-- 场景设置（单设备）弹窗 -->
+  <div id="modal-device-scene" class="modal-overlay" aria-hidden="true">
+    <div class="modal">
+      <h3 class="modal-title">场景设置</h3>
+      <p class="modal-desc">设备 <strong id="modal-device-scene-name"></strong> 选择当前运行的场景</p>
+      <div class="form-row">
+        <label>设备内存储的场景</label>
+        <div id="device-scene-list" class="device-scene-list"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" id="btn-apply-device-scene">应用</button>
+        <button type="button" class="btn btn-outline modal-cancel">取消</button>
+      </div>
+      <input type="hidden" id="device-scene-device-id" />
+    </div>
+  </div>
+
+  <!-- 创建新场景 弹窗 -->
+  <div id="modal-create-scene" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-scene">
+      <h3 id="modal-create-scene-title" class="modal-title">创建新场景</h3>
+      <form id="form-create-scene" class="form-create-scene">
+        <div class="form-row">
+          <label>场景名称</label>
+          <input type="text" id="scene-name" class="input" placeholder="输入场景名称" required />
+        </div>
+        <div class="form-row">
+          <label>场景备注</label>
+          <input type="text" id="scene-remark" class="input" placeholder="简要描述或备注" />
+        </div>
+        <hr class="form-divider" />
+        <div class="form-row">
+          <label>选择数据文件路径（多选）</label>
+          <div id="scene-file-rows" class="scene-file-rows">
+            <div class="file-row">
+              <input type="text" class="input file-path-input" placeholder="选择文件路径" readonly />
+              <button type="button" class="btn btn-outline btn-sm btn-select-file">选择文件</button>
+              <input type="file" class="file-input-hidden" multiple accept="*" />
+            </div>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-add-file-row">+ 添加文件</button>
+        </div>
+        <div class="form-row">
+          <label>文件顺序</label>
+          <div id="scene-order-btns" class="order-btns"></div>
+        </div>
+        <hr class="form-divider" />
+        <div class="form-row">
+          <label>各文件开始 / 结束时间</label>
+          <div id="scene-time-rows" class="scene-time-rows"></div>
+        </div>
+        <hr class="form-divider" />
+        <div class="form-row">
+          <label>是否循环播放</label>
+          <select id="scene-loop" class="input">
+            <option value="1">是</option>
+            <option value="0">否</option>
+          </select>
+        </div>
+      </form>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" id="btn-save-scene">保存场景</button>
+        <button type="button" class="btn btn-outline modal-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 固件升级：设备列表页（分组显示） -->
+  <div id="modal-firmware-main" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-firmware">
+      <h3 class="modal-title">固件升级</h3>
+      <p class="modal-desc">查看设备固件版本，选择设备进行固件更新</p>
+      <div id="firmware-groups-container" class="firmware-groups-container"><!-- 按分组显示，由 JS 渲染 --></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" id="btn-firmware-open-select">更新固件</button>
+        <button type="button" class="btn btn-outline modal-cancel">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 固件升级：选择固件路径与设备 -->
+  <div id="modal-firmware-select" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-lg">
+      <h3 class="modal-title">选择固件并选择设备</h3>
+      <div class="form-row">
+        <label>固件文件路径</label>
+        <div class="input-group">
+          <input type="text" id="firmware-path-input" class="input" placeholder="选择固件路径" readonly />
+          <button type="button" class="btn btn-outline btn-sm" id="btn-firmware-browse">浏览</button>
+          <input type="file" id="firmware-file-input" class="file-input-hidden" accept=".bin,.hex,.fw" />
+        </div>
+      </div>
+      <p class="modal-desc">选择要更新固件的设备（可单选、分组全选、一键全选）</p>
+      <div id="firmware-select-device-list" class="data-update-device-list"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-primary" id="btn-firmware-start-update">更新固件</button>
+        <button type="button" class="btn btn-outline modal-cancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 固件升级：更新中 -->
+  <div id="modal-firmware-progress" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-progress">
+      <div class="progress-spinner"></div>
+      <p class="progress-text">更新中，请稍候...</p>
+    </div>
+  </div>
+
+  <!-- 数据更新弹窗：选择场景 → 选择设备 → 开始更新 -->
+  <div id="modal-data-update" class="modal-overlay" aria-hidden="true">
+    <div class="modal modal-lg">
+      <h3 class="modal-title" id="modal-data-update-title">选择要下发的场景</h3>
+      <div id="data-update-step1" class="data-update-step">
+        <div class="form-row">
+          <label>已创建的场景</label>
+          <select id="data-update-scene-select" class="input">
+            <!-- 由 JS 填充 sceneList -->
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary" id="btn-update-next">下一步</button>
+          <button type="button" class="btn btn-outline modal-cancel">取消</button>
+        </div>
+      </div>
+      <div id="data-update-step2" class="data-update-step" style="display: none;">
+        <p class="modal-desc">选择需要更新数据的设备（可多选、分组全选、一键全选）</p>
+        <div id="data-update-device-list" class="data-update-device-list"></div>
+        <div class="form-row update-summary">
+          <label>预计更新时长</label>
+          <p id="data-update-duration" class="update-duration">—</p>
+        </div>
+        <div class="form-row update-summary">
+          <label>预计完成时间</label>
+          <p id="data-update-completion" class="update-completion">—</p>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary" id="btn-update-start">开始更新</button>
+          <button type="button" class="btn btn-secondary" id="btn-update-prev">上一步</button>
+          <button type="button" class="btn btn-outline modal-cancel">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>RF-6 中控软件 · 设备数量：30</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
